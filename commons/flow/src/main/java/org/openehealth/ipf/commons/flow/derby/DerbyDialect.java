@@ -21,7 +21,7 @@ package org.openehealth.ipf.commons.flow.derby;
  * Starting with Hibernate 3.5.x use the
  * {@link org.hibernate.dialect.DerbyDialect} implementation. It includes the
  * repeatable read isolation level below, as well as many other improvements for
- * newer version of Derby, such as result set LIMIT.
+ * Derby.
  * 
  * @author Martin Krasser
  */
