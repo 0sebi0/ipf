@@ -48,7 +48,6 @@ public class Iti43Endpoint extends DefaultItiEndpoint {
             "wsdl/iti43.wsdl",
             true,
             false,
-            false,
             false);
            
     /**

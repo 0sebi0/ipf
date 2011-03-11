@@ -15,12 +15,16 @@
  */
 package org.openehealth.ipf.platform.camel.ihe.pixpdqv3.iti45;
 
+import javax.xml.namespace.QName;
+
 import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
 import org.apache.cxf.endpoint.Server;
 import org.apache.cxf.frontend.ServerFactoryBean;
 import org.apache.cxf.interceptor.InterceptorProvider;
+import org.openehealth.ipf.commons.ihe.hl7v3.Hl7v3ClientFactory;
+import org.openehealth.ipf.commons.ihe.hl7v3.Hl7v3ServiceFactory;
 import org.openehealth.ipf.commons.ihe.hl7v3.Hl7v3ServiceInfo;
 import org.openehealth.ipf.commons.ihe.pixpdqv3.iti45.Iti45PortType;
 import org.openehealth.ipf.commons.ihe.ws.ItiClientFactory;
@@ -28,8 +32,6 @@ import org.openehealth.ipf.commons.ihe.ws.ItiServiceFactory;
 import org.openehealth.ipf.platform.camel.ihe.ws.DefaultItiConsumer;
 import org.openehealth.ipf.platform.camel.ihe.ws.DefaultItiEndpoint;
 import org.openehealth.ipf.platform.camel.ihe.ws.DefaultItiWebService;
-
-import javax.xml.namespace.QName;
 
 /**
  * The Camel endpoint for the ITI-45 transaction.
@@ -68,7 +70,7 @@ public class Iti45Endpoint extends DefaultItiEndpoint {
 
     @Override
     public Producer createProducer() throws Exception {
-        ItiClientFactory clientFactory = new ItiClientFactory(
+        ItiClientFactory clientFactory = new Hl7v3ClientFactory(
                 ITI_45, 
                 getServiceUrl(), 
                 getCustomInterceptors());
@@ -77,7 +79,7 @@ public class Iti45Endpoint extends DefaultItiEndpoint {
 
     @Override
     public Consumer createConsumer(Processor processor) throws Exception {
-        ItiServiceFactory serviceFactory = new ItiServiceFactory(
+        ItiServiceFactory serviceFactory = new Hl7v3ServiceFactory(
                 ITI_45, 
                 getServiceAddress(),
                 getCustomInterceptors());

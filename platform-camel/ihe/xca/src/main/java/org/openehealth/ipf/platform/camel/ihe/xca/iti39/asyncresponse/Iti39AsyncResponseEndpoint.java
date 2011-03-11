@@ -45,7 +45,6 @@ public class Iti39AsyncResponseEndpoint extends DefaultItiEndpoint {
             "wsdl/iti39-asyncresponse.wsdl",
             true,
             false,
-            false,
             false);
 
     /**

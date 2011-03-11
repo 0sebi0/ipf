@@ -47,8 +47,7 @@ public class Iti38Endpoint extends DefaultItiEndpoint {
             "wsdl/iti38.wsdl",
             true,
             false,
-            true,
-            false);
+            true);
 
 
     public Iti38Endpoint(

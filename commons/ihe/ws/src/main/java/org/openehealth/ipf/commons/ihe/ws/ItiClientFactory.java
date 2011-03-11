@@ -36,8 +36,8 @@ import org.apache.cxf.ws.addressing.soap.MAPCodec;
 import org.openehealth.ipf.commons.ihe.ws.cxf.FixContentTypeOutInterceptor;
 import org.openehealth.ipf.commons.ihe.ws.cxf.MustUnderstandDecoratorInterceptor;
 import org.openehealth.ipf.commons.ihe.ws.cxf.ProvidedAttachmentOutInterceptor;
-import org.openehealth.ipf.commons.ihe.ws.cxf.databinding.plainxml.PlainXmlDataBinding;
-import org.openehealth.ipf.commons.ihe.ws.cxf.payload.*;
+import org.openehealth.ipf.commons.ihe.ws.cxf.payload.OutPayloadExtractorInterceptor;
+import org.openehealth.ipf.commons.ihe.ws.cxf.payload.OutStreamSubstituteInterceptor;
 import org.openehealth.ipf.commons.ihe.ws.utils.SoapUtils;
 
 /**
@@ -131,13 +131,6 @@ public class ItiClientFactory {
         if (serviceInfo.isSwaOutSupport()) {
             client.getOutInterceptors().add(new ProvidedAttachmentOutInterceptor());
             client.getOutInterceptors().add(new FixContentTypeOutInterceptor());            
-        }
-
-        if (serviceInfo.isPlainXmlDataBinding()) {
-            client.getInInterceptors().add(new InPayloadExtractorInterceptor());
-            client.getInInterceptors().add(new InNamespaceMergeInterceptor());
-            client.getInInterceptors().add(new InPayloadInjectorInterceptor(0));
-            client.getEndpoint().getService().setDataBinding(new PlainXmlDataBinding());
         }
 
         InterceptorUtils.copyInterceptorsFromProvider(customInterceptors, client);

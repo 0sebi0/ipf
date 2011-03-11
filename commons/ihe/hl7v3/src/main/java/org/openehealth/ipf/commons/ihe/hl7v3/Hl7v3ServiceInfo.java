@@ -65,7 +65,7 @@ public class Hl7v3ServiceInfo extends ItiServiceInfo {
             boolean nakNeedControlActProcess,
             boolean auditRequestPayload)
     {
-        super(serviceName, serviceClass, bindingName, mtom, wsdlLocation, true, false, auditRequestPayload, true);
+        super(serviceName, serviceClass, bindingName, mtom, wsdlLocation, true, false, auditRequestPayload);
 
         this.requestValidationProfiles = requestValidationProfiles;
         this.responseValidationProfiles = responseValidationProfiles;

@@ -18,8 +18,8 @@ package org.openehealth.ipf.commons.ihe.xcpd;
 import org.apache.commons.lang.Validate;
 import org.apache.cxf.frontend.ServerFactoryBean;
 import org.apache.cxf.interceptor.InterceptorProvider;
+import org.openehealth.ipf.commons.ihe.hl7v3.Hl7v3ServiceFactory;
 import org.openehealth.ipf.commons.ihe.hl7v3.Hl7v3ServiceInfo;
-import org.openehealth.ipf.commons.ihe.ws.ItiServiceFactory;
 import org.openehealth.ipf.commons.ihe.ws.correlation.AsynchronyCorrelator;
 import org.openehealth.ipf.commons.ihe.ws.cxf.async.InFaultHackInterceptor;
 import org.openehealth.ipf.commons.ihe.ws.cxf.async.InRelatesToHackInterceptor;
@@ -30,7 +30,7 @@ import org.openehealth.ipf.commons.ihe.ws.cxf.audit.WsAuditStrategy;
  * Service factory for receivers of asynchronous XCPD responses.
  * @author Dmytro Rud
  */
-public class XcpdAsyncResponseServiceFactory extends ItiServiceFactory {
+public class XcpdAsyncResponseServiceFactory extends Hl7v3ServiceFactory {
     private final WsAuditStrategy auditStrategy;
     private final AsynchronyCorrelator correlator;
 
