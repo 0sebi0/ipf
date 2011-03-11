@@ -17,8 +17,8 @@ package org.openehealth.ipf.commons.ihe.xcpd;
 
 import org.apache.cxf.endpoint.Client;
 import org.apache.cxf.interceptor.InterceptorProvider;
-import org.openehealth.ipf.commons.ihe.hl7v3.Hl7v3ClientFactory;
 import org.openehealth.ipf.commons.ihe.hl7v3.Hl7v3ServiceInfo;
+import org.openehealth.ipf.commons.ihe.ws.ItiClientFactory;
 import org.openehealth.ipf.commons.ihe.ws.correlation.AsynchronyCorrelator;
 import org.openehealth.ipf.commons.ihe.ws.cxf.async.InPartialResponseHackInterceptor;
 import org.openehealth.ipf.commons.ihe.ws.cxf.asyncaudit.AsyncAuditOutRequestInterceptor;
@@ -29,7 +29,7 @@ import org.openehealth.ipf.commons.ihe.ws.cxf.audit.WsAuditStrategy;
  * Client factory for XCPD transactions.
  * @author Dmytro Rud
  */
-public class XcpdClientFactory extends Hl7v3ClientFactory {
+public class XcpdClientFactory extends ItiClientFactory {
     private final WsAuditStrategy auditStrategy;
     private final AsynchronyCorrelator correlator;
     

@@ -17,8 +17,8 @@ package org.openehealth.ipf.commons.ihe.xcpd;
 
 import org.apache.cxf.frontend.ServerFactoryBean;
 import org.apache.cxf.interceptor.InterceptorProvider;
-import org.openehealth.ipf.commons.ihe.hl7v3.Hl7v3ServiceFactory;
 import org.openehealth.ipf.commons.ihe.hl7v3.Hl7v3ServiceInfo;
+import org.openehealth.ipf.commons.ihe.ws.ItiServiceFactory;
 import org.openehealth.ipf.commons.ihe.ws.cxf.asyncaudit.AsyncAuditInRequestInterceptor;
 import org.openehealth.ipf.commons.ihe.ws.cxf.asyncaudit.AsyncAuditResponseInterceptor;
 import org.openehealth.ipf.commons.ihe.ws.cxf.audit.WsAuditStrategy;
@@ -27,7 +27,7 @@ import org.openehealth.ipf.commons.ihe.ws.cxf.audit.WsAuditStrategy;
  * Service factory for XCPD.
  * @author Dmytro Rud
  */
-public class XcpdServiceFactory extends Hl7v3ServiceFactory {
+public class XcpdServiceFactory extends ItiServiceFactory {
     private final WsAuditStrategy auditStrategy;
 
     /**

@@ -48,7 +48,8 @@ public class Iti16Endpoint extends DefaultItiEndpoint {
             "wsdl/iti16.wsdl",
             false,
             false,
-            true);
+            true,
+            false);
            
     /**
      * Constructs the endpoint.

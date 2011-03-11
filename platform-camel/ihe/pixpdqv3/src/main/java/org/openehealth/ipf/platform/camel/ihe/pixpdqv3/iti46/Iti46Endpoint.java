@@ -23,8 +23,6 @@ import org.apache.camel.Producer;
 import org.apache.cxf.endpoint.Server;
 import org.apache.cxf.frontend.ServerFactoryBean;
 import org.apache.cxf.interceptor.InterceptorProvider;
-import org.openehealth.ipf.commons.ihe.hl7v3.Hl7v3ClientFactory;
-import org.openehealth.ipf.commons.ihe.hl7v3.Hl7v3ServiceFactory;
 import org.openehealth.ipf.commons.ihe.hl7v3.Hl7v3ServiceInfo;
 import org.openehealth.ipf.commons.ihe.pixpdqv3.iti46.Iti46PortType;
 import org.openehealth.ipf.commons.ihe.ws.ItiClientFactory;
@@ -70,7 +68,7 @@ public class Iti46Endpoint extends DefaultItiEndpoint {
 
     @Override
     public Producer createProducer() throws Exception {
-        ItiClientFactory clientFactory = new Hl7v3ClientFactory(
+        ItiClientFactory clientFactory = new ItiClientFactory(
                 ITI_46, 
                 getServiceUrl(), 
                 getCustomInterceptors());
@@ -79,7 +77,7 @@ public class Iti46Endpoint extends DefaultItiEndpoint {
 
     @Override
     public Consumer createConsumer(Processor processor) throws Exception {
-        ItiServiceFactory serviceFactory = new Hl7v3ServiceFactory(
+        ItiServiceFactory serviceFactory = new ItiServiceFactory(
                 ITI_46, 
                 getServiceAddress(),
                 getCustomInterceptors());

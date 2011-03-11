@@ -25,6 +25,10 @@ import org.apache.cxf.interceptor.InterceptorProvider;
 import org.apache.cxf.jaxws.JaxWsServerFactoryBean;
 import org.apache.cxf.ws.addressing.WSAddressingFeature;
 import org.openehealth.ipf.commons.ihe.ws.cxf.WsSecurityUnderstandingInInterceptor;
+import org.openehealth.ipf.commons.ihe.ws.cxf.databinding.plainxml.PlainXmlDataBinding;
+import org.openehealth.ipf.commons.ihe.ws.cxf.payload.InNamespaceMergeInterceptor;
+import org.openehealth.ipf.commons.ihe.ws.cxf.payload.InPayloadExtractorInterceptor;
+import org.openehealth.ipf.commons.ihe.ws.cxf.payload.InPayloadInjectorInterceptor;
 
 /**
  * Factory for ITI web-services.
@@ -136,6 +140,13 @@ public class ItiServiceFactory {
     protected void configureInterceptors(ServerFactoryBean svrFactory) {
         svrFactory.getInInterceptors().add(new WsSecurityUnderstandingInInterceptor());
         InterceptorUtils.copyInterceptorsFromProvider(customInterceptors, svrFactory);
+
+        if (serviceInfo.isPlainXmlDataBinding()) {
+            svrFactory.getInInterceptors().add(new InPayloadExtractorInterceptor());
+            svrFactory.getInInterceptors().add(new InNamespaceMergeInterceptor());
+            svrFactory.getInInterceptors().add(new InPayloadInjectorInterceptor(0));
+            svrFactory.setDataBinding(new PlainXmlDataBinding());
+        }
     }
 
 

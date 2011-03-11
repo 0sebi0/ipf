@@ -34,6 +34,7 @@ public class ItiServiceInfo {
     private final boolean addressing;
     private final boolean swaOutSupport;
     private final boolean auditRequestPayload;
+    private final boolean plainXmlDataBinding;
 
     /**
      * Constructs the service info.
@@ -53,15 +54,19 @@ public class ItiServiceInfo {
      *          <code>true</code> if this service requires SwA for its output.
      * @param auditRequestPayload
      *          <code>true</code> if this service must save payload in audit record.
+     * @param plainXmlDataBinding
+     *          <code>true</code> if this service must use
+     *          {@link org.openehealth.ipf.commons.ihe.ws.cxf.databinding.plainxml.PlainXmlDataBinding}.
      */
-    public ItiServiceInfo(QName serviceName, 
+    public ItiServiceInfo(QName serviceName,
                           Class<?> serviceClass,
                           QName bindingName,
-                          boolean mtom, 
-                          String wsdlLocation, 
-                          boolean addressing, 
+                          boolean mtom,
+                          String wsdlLocation,
+                          boolean addressing,
                           boolean swaOutSupport,
-                          boolean auditRequestPayload)
+                          boolean auditRequestPayload,
+                          boolean plainXmlDataBinding)
     {
         Validate.notNull(serviceName, "serviceName");
         Validate.notNull(serviceClass, "serviceClass");
@@ -76,6 +81,7 @@ public class ItiServiceInfo {
         this.addressing = addressing;
         this.swaOutSupport = swaOutSupport;
         this.auditRequestPayload = auditRequestPayload;
+        this.plainXmlDataBinding = plainXmlDataBinding;
     }
 
     /**
@@ -136,4 +142,13 @@ public class ItiServiceInfo {
     public boolean isAuditRequestPayload() {
         return auditRequestPayload;
     }
+
+    /**
+     * @return <code>true</code> if this service must use
+     *      {@link org.openehealth.ipf.commons.ihe.ws.cxf.databinding.plainxml.PlainXmlDataBinding}.
+     */
+    public boolean isPlainXmlDataBinding() {
+        return plainXmlDataBinding;
+    }
+
 }
