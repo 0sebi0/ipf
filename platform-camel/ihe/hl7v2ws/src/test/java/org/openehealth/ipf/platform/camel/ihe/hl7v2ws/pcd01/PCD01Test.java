@@ -59,8 +59,8 @@ public class PCD01Test extends ServletContextTestSupport {
 
     @Test
     public void testParserSupportsCarriageReturn() throws Exception {
-        XmlSlurper s = new XmlSlurper(false,false);
-        s.parseText("<t>" + SPEC_REQUEST.replaceAll("&", "&amp;") + "</t>");
+        XmlSlurper s = new XmlSlurper(true,true);
+        s.parseText("<tag>" + SPEC_REQUEST.replaceAll("&", "&amp;") + "</tag>");
         
     }
     
