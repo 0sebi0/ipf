@@ -56,9 +56,8 @@
             <type>test-jar</type>
         </dependency>
         <dependency>
-            <groupId>org.openehealth.ipf.commons</groupId>
-            <artifactId>commons-ihe-ws</artifactId>
-            <version>${project.version}</version>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-core</artifactId>
             <scope>test</scope>
             <type>test-jar</type>
         </dependency>

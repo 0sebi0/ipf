@@ -22,14 +22,22 @@ import static org.apache.commons.lang.Validate.notNull;
 
 import java.util.List;
 
-import org.openehealth.ipf.modules.hl7.AckTypeCode;
-
 
 /**
  * Endpoint-agnostic parameters of an MLLP-based transaction.
  * @author Dmytro Rud
  */
 public class MllpTransactionConfiguration {
+    
+    /**
+     * Do not use auditing for all message types
+     */
+    public static final boolean [] NO_AUDITING = new boolean[]{};
+    /**
+     * Do not use response continuations for all message types
+     */
+    public static final boolean [] NO_RESPONSE_CONTINUATIONS = new boolean[]{};
+    
     private final String hl7Version;
     private final String sendingApplication;
     private final String sendingFacility;
@@ -74,7 +82,12 @@ public class MllpTransactionConfiguration {
      *      ignored for messages of type "ACK".  
      * @param auditabilityFlags
      *      flags of whether the messages of corresponding 
-     *      type should be audited.
+     *      type should be audited. 
+     *      If {@link #NO_AUDITING}, the transaction will do no auditing
+     * @param responseContinuabilityFlags
+     *      flags of whether the messages of corresponding 
+     *      type should support HL7 response continuations. 
+     *      If emtpy or <code>null</code> no continuations will be used for all message types. 
      */
     public MllpTransactionConfiguration(
             String hl7Version,
@@ -104,8 +117,12 @@ public class MllpTransactionConfiguration {
         isTrue(allowedRequestMessageTypes.length == allowedRequestTriggerEvents.length);
         isTrue(allowedRequestMessageTypes.length == allowedResponseMessageTypes.length);
         isTrue(allowedRequestMessageTypes.length == allowedResponseTriggerEvents.length);
-        isTrue(allowedRequestMessageTypes.length == auditabilityFlags.length);
-        isTrue(allowedRequestMessageTypes.length == responseContinuabilityFlags.length);
+        if (auditabilityFlags != NO_AUDITING) {
+            isTrue(allowedRequestMessageTypes.length == auditabilityFlags.length);
+        }
+        if (responseContinuabilityFlags != NO_RESPONSE_CONTINUATIONS){
+            isTrue(allowedRequestMessageTypes.length == responseContinuabilityFlags.length);
+        }
         
         // QC passed ;)
         
@@ -183,6 +200,9 @@ public class MllpTransactionConfiguration {
      */
     public boolean isAuditable(String messageType) {
         int index = indexOf(messageType, allowedRequestMessageTypes);
+        if (NO_AUDITING.equals(auditabilityFlags)){
+            return false;
+        }
         if(index != -1) {
             return auditabilityFlags[index];
         }
@@ -200,7 +220,9 @@ public class MllpTransactionConfiguration {
      */
     public boolean isContinuable(String messageType) {
         int index = indexOf(messageType, allowedRequestMessageTypes);
-        if(index != -1) {
+        if (NO_RESPONSE_CONTINUATIONS.equals(responseContinuabilityFlags)) {
+            return false;
+        }  else if(index != -1) {
             return responseContinuabilityFlags[index];
         }
         throw new IllegalArgumentException("Unknown message type " + messageType);
@@ -260,6 +282,14 @@ public class MllpTransactionConfiguration {
 
     public String getSendingFacility() {
         return sendingFacility;
+    }
+    
+    public String[] getAllowedRequestMessageTypes() {
+        return allowedRequestMessageTypes;
+    }
+
+    public String[] getAllowedResponseMessageTypes() {
+        return allowedResponseMessageTypes;
     }
 }
 

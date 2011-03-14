@@ -24,9 +24,20 @@ import org.openehealth.ipf.platform.camel.ihe.hl7v2ws.core.Hl7v2wsTransactionCon
  * @author Dmytro Rud
  */
 public class Pcd01Service extends AbstractHl7v2WebService implements Pcd01PortType {
-    // TODO fill parameters
+
     private static final Hl7v2wsTransactionConfiguration CONFIG = new Hl7v2wsTransactionConfiguration(
-    );
+            "2.6", 
+            "PCD01 adapter", 
+            "IPF", 
+            207, 
+            207,
+            new String[] {"ORU"}, 
+            new String[] {"R01"}, 
+            new String[] {"ACK"}, 
+            new String[] {"*"},
+            "CommunicatePCDData",
+            "CommunicatePCDDataResponse",
+            "urn:ihe:pcd:dec:2010");
 
 
     public Pcd01Service() {
@@ -35,7 +46,9 @@ public class Pcd01Service extends AbstractHl7v2WebService implements Pcd01PortTy
 
 
     @Override
-    public String communicate(String requestString) {
-        return doProcess(requestString);
+    public String communicate(String requestXmlString){
+        return doProcess(requestXmlString);
     }
 }
+
+

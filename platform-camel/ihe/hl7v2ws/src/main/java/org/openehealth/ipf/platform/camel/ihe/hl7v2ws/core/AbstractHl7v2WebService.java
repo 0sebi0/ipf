@@ -15,98 +15,164 @@
  */
 package org.openehealth.ipf.platform.camel.ihe.hl7v2ws.core;
 
+import static org.openehealth.ipf.platform.camel.ihe.mllp.core.MllpMarshalUtils.extractMessageAdapter;
+import groovy.util.XmlSlurper;
+import groovy.util.slurpersupport.GPathResult;
+
+import java.io.IOException;
+
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.apache.camel.Exchange;
+import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.openehealth.ipf.modules.hl7.AckTypeCode;
+import org.openehealth.ipf.modules.hl7.HL7v2Exception;
+import org.openehealth.ipf.modules.hl7.message.MessageUtils;
+import org.openehealth.ipf.modules.hl7.parser.PipeParser;
+import org.openehealth.ipf.modules.hl7dsl.MessageAdapter;
+import org.openehealth.ipf.platform.camel.core.util.Exchanges;
+import org.openehealth.ipf.platform.camel.ihe.mllp.core.MllpMarshalUtils;
+import org.openehealth.ipf.platform.camel.ihe.ws.DefaultItiWebService;
+import org.xml.sax.SAXException;
+
 import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.model.Message;
 import ca.uhn.hl7v2.parser.EncodingNotSupportedException;
 import ca.uhn.hl7v2.parser.Parser;
-import org.apache.camel.Exchange;
-import org.openehealth.ipf.modules.hl7.parser.PipeParser;
-import org.openehealth.ipf.modules.hl7dsl.MessageAdapter;
-import org.openehealth.ipf.platform.camel.core.util.Exchanges;
-import org.openehealth.ipf.platform.camel.ihe.ws.DefaultItiWebService;
 
 /**
  * Generic implementation of an HL7v2-based Web Service.
+ * 
  * @author Dmytro Rud
+ * @author Mitko Kolev
+ * @author Stefan Ivanov
  */
 public class AbstractHl7v2WebService extends DefaultItiWebService {
     private static final Parser PARSER = new PipeParser();
+    private static final Log LOG = LogFactory
+            .getLog(AbstractHl7v2WebService.class);
 
     private final Hl7v2wsTransactionConfiguration config;
-
 
     public AbstractHl7v2WebService(Hl7v2wsTransactionConfiguration config) {
         super();
         this.config = config;
     }
 
-
-    protected String doProcess(String requestString) {
-        Exception exception = null;
-        Message requestMessage, responseMessage;
-
+    protected String doProcess(String requestXmlString){
         try {
-            requestMessage = PARSER.parse(requestString);
-        } catch (EncodingNotSupportedException e) {
-            // TODO: reuse org.openehealth.ipf.platform.camel.ihe.mllp.core.intercept.consumer.ConsumerMarshalInterceptor.processUnmarshallingException()
-            Message nak = createNak(e);
-            return createXmlResponse(nak);
-        } catch (HL7Exception e) {
-            // TODO: reuse org.openehealth.ipf.platform.camel.ihe.mllp.core.intercept.consumer.ConsumerMarshalInterceptor.processUnmarshallingException()
-            Message nak = createNak(e);
-            return createXmlResponse(nak);
+            Message hl7v2Request = extractHl7v2Payload(requestXmlString);
+            Exchange exchange = super.process(hl7v2Request);
+
+            Exception processingException = exchange.getException();
+            if (processingException != null) {
+                LOG.info("Creating NAK for exchange exception "  +  processingException.getMessage());
+                return createHl7XmlNakResponse(processingException);
+            }
+            
+            MessageAdapter response = extractMessageAdapter(Exchanges.resultMessage(exchange), PARSER);
+            //FIXME no need to adapt the message here. a Hl7 message is enough
+            return createHl7XmlResponse((Message)response.getTarget());
+            
+        } catch (Exception formatException) {
+            return createHl7XmlNakResponse(formatException);
         }
 
-        Exchange exchange = super.process(requestMessage);
-        Object o = Exchanges.resultMessage(exchange).getBody();
-
-        // TODO: reuse org.openehealth.ipf.platform.camel.ihe.mllp.core.MllpMarshalUtils.extractMessageAdapter()
-        if(exchange.getException() != null) {
-            exception = exchange.getException();
-        }
-        else if (o instanceof Message) {
-            responseMessage = (Message) o;
-        }
-        else if (o instanceof MessageAdapter) {
-            responseMessage = (Message) ((MessageAdapter) o).getTarget();
-        }
-        else {
-            throw new RuntimeException("cannot process " +
-                    ((o == null) ? "null" : o.getClass().getName()));
-        }
-
-        return createXmlResponse(responseMessage);
     }
 
+    /**
+     * The HL7 v.2 payload is the text in the root; See section J.2 in (PCD TF-2
+     * 
+     * @param xmlPayload
+     *            the XML in the SOAP body
+     * @return the HL7 v.2 payload, which is the text of the root element of the
+     *         XML in the SOAP body
+     * @throws EncodingNotSupportedException
+     * @throws HL7Exception
+     */
+    public Message extractHl7v2Payload(String xmlPayload)
+            throws EncodingNotSupportedException, HL7Exception {
+        GPathResult rootNode;
+        try {
+            rootNode = new XmlSlurper(false, false).parseText(xmlPayload);
+            String payload = normalize(rootNode.text());
+            return PARSER.parse(payload);
+        } catch (IOException e) {
+            throw new HL7Exception("Unable to read the XML payload", e);
+        } catch (SAXException e) {
+            throw new HL7Exception("Unable to parse the XML payload", e);
+        } catch (ParserConfigurationException e) {
+            throw new HL7Exception("Unable to parse the XML payload", e);
+        }
 
-
-    private MessageAdapter extractMessageAdapter(String xmlPayload) {
-        // TODO
     }
 
+    /**
+     * @return the transaction configuration
+     */
+    public Hl7v2wsTransactionConfiguration getConfiguration() {
+        return config;
+    }
 
-    private String createXmlResponse(Message message) {
+    private String createHl7XmlResponse(Message message) throws HL7Exception  {
+
+        String msgAsXMLText = toHl7XmlString(message);
         return new StringBuilder()
-                .append('<')
-                .append(config.getRequestRootElementName())
-                .append(" xmlns=\"")
-                .append(config.nsUri)
-                .append("\">\n")
-                .append(renderHl7(message))
-                .append("\n</")
-                .append(config.getRequestRootElementName())
-                .append('>')
-                .toString();
+            .append('<').append(config.getResponseRootElementName())
+            .append(" xmlns=\"").append(config.nsUri).append("\">\n")
+            .append(msgAsXMLText)
+            .append("</").append(config.getResponseRootElementName()).append('>')
+            .toString();
+
     }
 
-
-    private String renderHl7(Message message) {
-        try {
-            return PARSER.encode(message);
-            // TODO: post-process, quote special symbols
-        } catch (HL7Exception e) {
-            throw new RuntimeException(e);
+    private String normalize(String hl7String) throws SAXException {
+        String result = hl7String;
+        if (!hl7String.startsWith("MSH")) {
+            int headerIndex = hl7String.indexOf("MSH");
+            if (headerIndex == -1) {
+                throw new SAXException(
+                        "The payload does not contain MSH element as expected");
+            }
+            result = hl7String.substring(headerIndex);
         }
+        return result;
+    }
+
+    private String toHl7XmlString(Message message) throws HL7Exception {
+        String parsed = PARSER.encode(message);
+        String specialCharsEscaped = StringEscapeUtils.escapeXml(parsed);
+        //replace the \r with its the XML representation, and add a newline for readability 
+        return specialCharsEscaped.replaceAll("\r", "&#xD;\n");
+
+    }
+    
+
+    private Message createNak(Throwable t) {
+
+        HL7v2Exception hl7e = new HL7v2Exception(
+                MllpMarshalUtils.formatErrorMessage(t),
+                config.getRequestErrorDefaultErrorCode(), t);
+
+        // FIXME, validate error type and configuration
+        Message nak = MessageUtils.defaultNak(hl7e, AckTypeCode.AR,
+                config.getHl7Version(), config.getSendingApplication(),
+                config.getSendingFacility());
+        return nak;
+    }
+
+    
+    private String createHl7XmlNakResponse(Throwable exception) {
+        Message nak = createNak(exception);
+        try{
+            return toHl7XmlString(nak);
+        }catch (HL7Exception e){
+            LOG.error("Unable to render the default response NAK message", e);
+            return new MessageAdapter(nak).toString();
+        }
+
     }
 
 }

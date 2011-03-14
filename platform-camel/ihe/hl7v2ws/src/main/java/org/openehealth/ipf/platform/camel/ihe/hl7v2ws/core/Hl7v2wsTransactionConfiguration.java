@@ -19,6 +19,7 @@ import org.openehealth.ipf.platform.camel.ihe.mllp.core.MllpTransactionConfigura
 
 /**
  * @author Dmytro Rud
+ * @author Mitko Kolev
  */
 public class Hl7v2wsTransactionConfiguration extends MllpTransactionConfiguration {
 
@@ -28,7 +29,8 @@ public class Hl7v2wsTransactionConfiguration extends MllpTransactionConfiguratio
     final String requestRootElementName;
     final String responseRootElementName;
     final String nsUri;
-
+    
+    
 
     public Hl7v2wsTransactionConfiguration(
             String hl7Version,
@@ -40,8 +42,6 @@ public class Hl7v2wsTransactionConfiguration extends MllpTransactionConfiguratio
             String[] allowedRequestTriggerEvents,
             String[] allowedResponseMessageTypes,
             String[] allowedResponseTriggerEvents,
-            boolean[] auditabilityFlags,
-            boolean[] responseContinuabilityFlags,
             String incomingRootElementName,
             String outgoingRootElementName,
             String nsUri)
@@ -55,8 +55,8 @@ public class Hl7v2wsTransactionConfiguration extends MllpTransactionConfiguratio
                 allowedRequestTriggerEvents,
                 allowedResponseMessageTypes,
                 allowedResponseTriggerEvents,
-                auditabilityFlags,                  // TODO: eliminate
-                responseContinuabilityFlags);       // TODO: eliminate
+                NO_AUDITING,
+                NO_RESPONSE_CONTINUATIONS);
 
         this.requestRootElementName = incomingRootElementName;
         this.responseRootElementName = outgoingRootElementName;
@@ -72,7 +72,7 @@ public class Hl7v2wsTransactionConfiguration extends MllpTransactionConfiguratio
         return responseRootElementName;
     }
 
-    public String getNsUri() {
+    public String getNamespaceUri() {
         return nsUri;
     }
 }

@@ -36,12 +36,13 @@ import javax.xml.namespace.QName;
  */
 public class Pcd01Endpoint extends DefaultItiEndpoint {
     private static final String NS_URI = "urn:ihe:pcd:dec:2010";
-    public static final ItiServiceInfo WAN = new ItiServiceInfo(
+    
+    public static final ItiServiceInfo SERVICE_INFO = new ItiServiceInfo(
             new QName(NS_URI, "DeviceObservationConsumer_Service", "wan"),
             Pcd01PortType.class,
             new QName(NS_URI, "DeviceObservationConsumer_Binding_Soap12", "wan"),
             false,
-            "wsdl/wan/wan-raw.wsdl",
+            "wsdl/pcd01/pcd01-raw.wsdl",
             true,
             false,
             false);
@@ -67,7 +68,7 @@ public class Pcd01Endpoint extends DefaultItiEndpoint {
     @Override
     public Producer createProducer() throws Exception {
         ItiClientFactory clientFactory = new ItiClientFactory(
-                WAN,
+                SERVICE_INFO,
                 getServiceUrl(), 
                 getCustomInterceptors());
         return new Pcd01Producer(this, clientFactory);
@@ -76,7 +77,7 @@ public class Pcd01Endpoint extends DefaultItiEndpoint {
     @Override
     public Consumer createConsumer(Processor processor) throws Exception {
         ItiServiceFactory serviceFactory = new ItiServiceFactory(
-                WAN,
+                SERVICE_INFO,
                 getServiceAddress(),
                 getCustomInterceptors());
         ServerFactoryBean serverFactory =

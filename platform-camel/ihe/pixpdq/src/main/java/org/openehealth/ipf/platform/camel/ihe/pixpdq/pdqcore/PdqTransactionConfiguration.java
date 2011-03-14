@@ -23,6 +23,7 @@ import org.openehealth.ipf.platform.camel.ihe.mllp.core.MllpTransactionConfigura
  * @author Dmytro Rud
  */
 public class PdqTransactionConfiguration extends MllpTransactionConfiguration {
+   
     public PdqTransactionConfiguration(
             String hl7Version,
             String sendingApplication, 
