@@ -23,14 +23,9 @@ import org.openehealth.ipf.platform.camel.ihe.mllp.core.MllpTransactionConfigura
  */
 public class Hl7v2wsTransactionConfiguration extends MllpTransactionConfiguration {
 
-    // TODO: combine this with org.openehealth.ipf.commons.ihe.ws.ItiServiceInfo,
-    // which is used in *Endpoint classes
-
-    final String requestRootElementName;
-    final String responseRootElementName;
-    final String nsUri;
-    
-    
+    private final String requestRootElementName;
+    private final String responseRootElementName;
+    private final String nsUri;
 
     public Hl7v2wsTransactionConfiguration(
             String hl7Version,
@@ -42,9 +37,10 @@ public class Hl7v2wsTransactionConfiguration extends MllpTransactionConfiguratio
             String[] allowedRequestTriggerEvents,
             String[] allowedResponseMessageTypes,
             String[] allowedResponseTriggerEvents,
+            boolean [] auditiingFlags,
             String incomingRootElementName,
             String outgoingRootElementName,
-            String nsUri)
+            String namespaceUri)
     {
         super(hl7Version,
                 sendingApplication,
@@ -55,12 +51,12 @@ public class Hl7v2wsTransactionConfiguration extends MllpTransactionConfiguratio
                 allowedRequestTriggerEvents,
                 allowedResponseMessageTypes,
                 allowedResponseTriggerEvents,
-                NO_AUDITING,
+                auditiingFlags,
                 NO_RESPONSE_CONTINUATIONS);
 
         this.requestRootElementName = incomingRootElementName;
         this.responseRootElementName = outgoingRootElementName;
-        this.nsUri = nsUri;
+        this.nsUri = namespaceUri;
     }
 
 

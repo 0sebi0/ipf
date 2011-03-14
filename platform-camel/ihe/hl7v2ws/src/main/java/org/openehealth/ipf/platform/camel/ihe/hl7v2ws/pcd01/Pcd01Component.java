@@ -24,8 +24,8 @@ import org.openehealth.ipf.platform.camel.ihe.ws.DefaultWsComponent;
  * The Camel component for the IHE PCD-01 transaction.
  */
 public class Pcd01Component extends DefaultWsComponent {
-    @Override
     @SuppressWarnings("unchecked") // Required because of base class
+    @Override
     protected Endpoint createEndpoint(String uri, String remaining, Map parameters) throws Exception {
         return new Pcd01Endpoint(uri, remaining, this, getCustomInterceptors(parameters));
     }

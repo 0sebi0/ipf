@@ -18,7 +18,7 @@ package org.openehealth.ipf.platform.camel.ihe.hl7v2ws.pcd01;
 import org.openehealth.ipf.commons.ihe.hl7v2ws.pcd01.Pcd01PortType;
 import org.openehealth.ipf.platform.camel.ihe.hl7v2ws.core.AbstractHl7v2WebService;
 import org.openehealth.ipf.platform.camel.ihe.hl7v2ws.core.Hl7v2wsTransactionConfiguration;
-
+import static org.openehealth.ipf.platform.camel.ihe.mllp.core.MllpTransactionConfiguration.NO_AUDITING;
 /**
  * Service implementation for the IHE PCD-01 transaction.
  * @author Dmytro Rud
@@ -35,6 +35,7 @@ public class Pcd01Service extends AbstractHl7v2WebService implements Pcd01PortTy
             new String[] {"R01"}, 
             new String[] {"ACK"}, 
             new String[] {"*"},
+            NO_AUDITING,
             "CommunicatePCDData",
             "CommunicatePCDDataResponse",
             "urn:ihe:pcd:dec:2010");
@@ -43,7 +44,6 @@ public class Pcd01Service extends AbstractHl7v2WebService implements Pcd01PortTy
     public Pcd01Service() {
         super(CONFIG);
     }
-
 
     @Override
     public String communicate(String requestXmlString){

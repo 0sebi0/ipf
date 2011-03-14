@@ -15,6 +15,8 @@
  */
 package org.openehealth.ipf.platform.camel.ihe.hl7v2ws.pcd01;
 
+import javax.xml.namespace.QName;
+
 import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
@@ -29,20 +31,19 @@ import org.openehealth.ipf.platform.camel.ihe.ws.DefaultItiConsumer;
 import org.openehealth.ipf.platform.camel.ihe.ws.DefaultItiEndpoint;
 import org.openehealth.ipf.platform.camel.ihe.ws.DefaultItiWebService;
 
-import javax.xml.namespace.QName;
-
 /**
  * Camel endpoint for the PCD-01 transaction.
  */
 public class Pcd01Endpoint extends DefaultItiEndpoint {
+    
     private static final String NS_URI = "urn:ihe:pcd:dec:2010";
     
     public static final ItiServiceInfo SERVICE_INFO = new ItiServiceInfo(
-            new QName(NS_URI, "DeviceObservationConsumer_Service", "wan"),
+            new QName(NS_URI, "DeviceObservationConsumer_Service", "ihe"),
             Pcd01PortType.class,
-            new QName(NS_URI, "DeviceObservationConsumer_Binding_Soap12", "wan"),
+            new QName(NS_URI, "DeviceObservationConsumer_Binding_Soap12", "ihe"),
             false,
-            "wsdl/pcd01/pcd01-raw.wsdl",
+            "wsdl/pcd01/pcd01.wsdl",
             true,
             false,
             false);

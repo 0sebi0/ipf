@@ -16,15 +16,8 @@
 package org.openehealth.ipf.platform.camel.ihe.hl7v2ws.core;
 
 import static org.openehealth.ipf.platform.camel.ihe.mllp.core.MllpMarshalUtils.extractMessageAdapter;
-import groovy.util.XmlSlurper;
-import groovy.util.slurpersupport.GPathResult;
-
-import java.io.IOException;
-
-import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.camel.Exchange;
-import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.openehealth.ipf.modules.hl7.AckTypeCode;
@@ -63,7 +56,7 @@ public class AbstractHl7v2WebService extends DefaultItiWebService {
 
     protected String doProcess(String requestXmlString){
         try {
-            Message hl7v2Request = extractHl7v2Payload(requestXmlString);
+            Message hl7v2Request = parseHl7v2Payload(requestXmlString);
             Exchange exchange = super.process(hl7v2Request);
 
             Exception processingException = exchange.getException();
@@ -82,29 +75,14 @@ public class AbstractHl7v2WebService extends DefaultItiWebService {
 
     }
 
-    /**
-     * The HL7 v.2 payload is the text in the root; See section J.2 in (PCD TF-2
-     * 
-     * @param xmlPayload
-     *            the XML in the SOAP body
-     * @return the HL7 v.2 payload, which is the text of the root element of the
-     *         XML in the SOAP body
-     * @throws EncodingNotSupportedException
-     * @throws HL7Exception
-     */
-    public Message extractHl7v2Payload(String xmlPayload)
+   
+    public Message parseHl7v2Payload(String hl7v2Payload)
             throws EncodingNotSupportedException, HL7Exception {
-        GPathResult rootNode;
         try {
-            rootNode = new XmlSlurper(false, false).parseText(xmlPayload);
-            String payload = normalize(rootNode.text());
+            String payload = normalize(hl7v2Payload);
             return PARSER.parse(payload);
-        } catch (IOException e) {
-            throw new HL7Exception("Unable to read the XML payload", e);
-        } catch (SAXException e) {
-            throw new HL7Exception("Unable to parse the XML payload", e);
-        } catch (ParserConfigurationException e) {
-            throw new HL7Exception("Unable to parse the XML payload", e);
+        } catch (Exception e) {
+            throw new HL7Exception("Unable to parse the XML payload. " + e.getMessage(), e);
         }
 
     }
@@ -117,15 +95,7 @@ public class AbstractHl7v2WebService extends DefaultItiWebService {
     }
 
     private String createHl7XmlResponse(Message message) throws HL7Exception  {
-
-        String msgAsXMLText = toHl7XmlString(message);
-        return new StringBuilder()
-            .append('<').append(config.getResponseRootElementName())
-            .append(" xmlns=\"").append(config.nsUri).append("\">\n")
-            .append(msgAsXMLText)
-            .append("</").append(config.getResponseRootElementName()).append('>')
-            .toString();
-
+        return  toHl7v2String(message);
     }
 
     private String normalize(String hl7String) throws SAXException {
@@ -134,19 +104,16 @@ public class AbstractHl7v2WebService extends DefaultItiWebService {
             int headerIndex = hl7String.indexOf("MSH");
             if (headerIndex == -1) {
                 throw new SAXException(
-                        "The payload does not contain MSH element as expected");
+                        "The payload does not contain MSH element as expected!");
             }
             result = hl7String.substring(headerIndex);
         }
         return result;
     }
 
-    private String toHl7XmlString(Message message) throws HL7Exception {
+    private String toHl7v2String(Message message) throws HL7Exception {
         String parsed = PARSER.encode(message);
-        String specialCharsEscaped = StringEscapeUtils.escapeXml(parsed);
-        //replace the \r with its the XML representation, and add a newline for readability 
-        return specialCharsEscaped.replaceAll("\r", "&#xD;\n");
-
+        return parsed.replaceAll("\r", "\r\n");
     }
     
 
@@ -167,7 +134,7 @@ public class AbstractHl7v2WebService extends DefaultItiWebService {
     private String createHl7XmlNakResponse(Throwable exception) {
         Message nak = createNak(exception);
         try{
-            return toHl7XmlString(nak);
+            return toHl7v2String(nak);
         }catch (HL7Exception e){
             LOG.error("Unable to render the default response NAK message", e);
             return new MessageAdapter(nak).toString();

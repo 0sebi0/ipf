@@ -15,19 +15,19 @@
  */
 package org.openehealth.ipf.platform.camel.ihe.ws;
 
-import javax.servlet.Servlet;
-import javax.servlet.ServletContext;
+import static org.openehealth.ipf.commons.ihe.ws.server.ServletServer.getFreePort;
+import static org.openehealth.ipf.platform.camel.core.util.Exchanges.resultMessage;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 import org.apache.camel.ContextTestSupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.camel.Exchange;
+import org.apache.camel.Processor;
+import org.apache.commons.io.IOUtils;
 import org.apache.cxf.transport.servlet.CXFServlet;
 import org.junit.AfterClass;
-import org.openehealth.ipf.commons.ihe.ws.server.JettyServer;
-import org.openehealth.ipf.commons.ihe.ws.server.ServletServer;
-import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.web.context.support.WebApplicationContextUtils;
 
 /**
  * Base class for tests that are run within an embedded web container.
@@ -36,85 +36,98 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
  * @author Mitko Kolev
  */
 public abstract class ServletContextTestSupport extends ContextTestSupport {
-    private static final transient Log LOG = LogFactory
-            .getLog(ServletContextTestSupport.class);
 
-    private static ServletServer servletServer;
+    private static ServletContainerHolder container = new ServletContainerHolder();
 
-    protected static ApplicationContext appContext;
-    private static int port;
-
-    public ServletContextTestSupport(){
+    public ServletContextTestSupport() {
         super();
     }
-    
+
+    private static int PORT = getFreePort();
+
     @Override
-    protected void setUp() throws Exception { 
+    protected void setUp() throws Exception {
+        //do the server start here to be able to override the config in the test class
+        if (!container.isServerStarted()) {
+            container.startServer(new CXFServlet(), getAppContext(),
+                    getServerPort(), isServerSecure());
+        }
         super.setUp();
     }
-    
-    
+
     @Override
-    protected void tearDown() throws Exception { 
+    protected void tearDown() throws Exception {
         super.tearDown();
     }
-    
-    public static int getPort(){
-        return port;
+
+    /**
+     * Override this method to use a custom server port.
+     * 
+     * @return a random free port.
+     */
+    protected int getServerPort() {
+        return PORT;
     }
-    
-    public static void startServer(Servlet servlet, String appContextName,
-            boolean secure) {
-        ClassPathResource contextResource = new ClassPathResource(
-                appContextName);
 
-        port = JettyServer.getFreePort();
-        LOG.info("Publishing services on port: " + port);
-        servletServer = new JettyServer();
+    /**
+     * Override this method to use a secure server.
+     * 
+     * @return <code>false</code> by default.
+     */
+    public boolean isServerSecure() {
+        return false;
+    }
 
+    /**
+     * Override this method to use custom application context.
+     * 
+     * @return the default application context;
+     */
+    public String getAppContext() {
+        return "cxf-only-context.xml";
+    }
+
+    /**
+     * Helper DSL method to set the out body.
+     * 
+     * @param body
+     *            an Object
+     * @return a processor that sets the output body.
+     */
+    protected <T> Processor setOutBody(final T body) {
+        return new Processor() {
+            @Override
+            public void process(Exchange exchange) throws Exception {
+                resultMessage(exchange).setBody(body);
+            }
+        };
+    }
+
+    /**
+     * Load the content of a classpath resource. The resource is read with UTF-8
+     * encoding.
+     * 
+     * @param path
+     *            a path to a classpath resource
+     * @return a String representation of the resource.
+     */
+    public static String load(String path) {
+        ClassPathResource resource = new ClassPathResource(path);
+        InputStream stream = null;
         try {
-            servletServer.setContextResource(contextResource.getURI()
-                    .toString());
-        } catch (Exception e) {
+            stream = resource.getInputStream();
+            return IOUtils.toString(stream, "UTF-8");
+        } catch (IOException e) {
             throw new RuntimeException(e);
+        } finally {
+            IOUtils.closeQuietly(stream);
         }
-        servletServer.setPort(port);
-        servletServer.setContextPath("");
-        servletServer.setServletPath("/*");
-        servletServer.setServlet(servlet);
-        servletServer.setKeystoreFile("keystore");
-        servletServer.setKeystorePass("changeit");
-        servletServer.setTruststoreFile("keystore");
-        servletServer.setTruststorePass("changeit");
-
-        servletServer.start();
-
-        ServletContext servletContext = servlet.getServletConfig()
-                .getServletContext();
-        appContext = WebApplicationContextUtils
-                .getRequiredWebApplicationContext(servletContext);
-    }
-
-    public static void startServerCXF(String appContextName, boolean secure) {
-        startServer(new CXFServlet(), appContextName, secure);
-    }
-
-    public static void startServerCXF(String appContextName) {
-        startServer(new CXFServlet(), appContextName, false);
-    }
-
-    public static void startServerCXF() {
-        startServer(new CXFServlet(), "cxf-only-context.xml", false);
-    }
-
-    public static void startServer(Servlet servlet, String appContextName) {
-        startServer(servlet, appContextName, false);
     }
 
     @AfterClass
     public static void stopServer() {
-        if (servletServer != null) {
-            servletServer.stop();
+        if (container.isServerStarted()) {
+            container.stopServer();
         }
     }
 }
