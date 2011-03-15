@@ -34,9 +34,9 @@ import org.openehealth.ipf.modules.hl7dsl.MessageAdapters;
 
 import ca.uhn.hl7v2.parser.Parser;
 
+
 /**
  * Various helper methods for data transformation.
- * 
  * @author Dmytro Rud
  */
 public class MllpMarshalUtils {
@@ -44,76 +44,83 @@ public class MllpMarshalUtils {
     private MllpMarshalUtils() {
         throw new IllegalStateException("Cannot instantiate helper class");
     }
-
+    
+    
     /**
      * Converts a set of some standard PIX/PDQ-related data types to String.
-     * 
      * @param message
-     *            Camel message containing the data to be converted.
+     *      Camel message containing the data to be converted. 
      * @param charset
-     *            character set.
-     * @param parser
-     *            HL7 parser.
-     * @return String representing the original exchange or <tt>null</tt> when
-     *         the data type is unknown.
+     *      character set. 
+     * @param parser 
+     *      HL7 parser. 
+     * @return
+     *      String representing the original exchange or <tt>null</tt>
+     *      when the data type is unknown. 
      * @throws Exception
-     *             on parsing and marshaling errors.
+     *      on parsing and marshaling errors.
      */
-    public static String marshalStandardTypes(Message message, String charset,
-            Parser parser) throws Exception {
+    public static String marshalStandardTypes(Message message, String charset, Parser parser) throws Exception {
         Object body = message.getBody();
-        if (!typeSupported(body)) {
+        if( ! typeSupported(body)) {
             return null;
         }
-
+        
         String s = null;
-        if (body instanceof String) {
+        if(body instanceof String) {
             s = (String) body;
-        } else if (body instanceof MessageAdapter) {
+        } else if(body instanceof MessageAdapter) {
             s = body.toString();
-        } else if (body instanceof ca.uhn.hl7v2.model.Message) {
+        } else if(body instanceof ca.uhn.hl7v2.model.Message) {
             s = parser.encode((ca.uhn.hl7v2.model.Message) body);
-        } else if (body instanceof File) {
+        } else if(body instanceof File) {
             s = readFile(body, charset);
-        } else if (body instanceof GenericFile<?>) {
+        } else if(body instanceof GenericFile<?>) {
             Object file = ((GenericFile<?>) body).getFile();
-            if (file instanceof File) {
+            if(file instanceof File) {
                 s = readFile(file, charset);
             }
         } else {
-            // In standard Camel distribution this will concern
+            // In standard Camel distribution this will concern  
             // byte[], InputStream and ByteBuffer.
             // See also: http://camel.apache.org/list-of-type-conversions.html
             byte[] bytes = message.getBody(byte[].class);
-            if (bytes != null) {
+            if(bytes != null) {
                 s = new String(bytes, charset);
             }
         }
         return s;
     }
+    
 
-    private static String readFile(Object file, String charset)
-            throws Exception {
+    private static String readFile(Object file, String charset) throws Exception {
         byte[] bytes = IOConverter.toByteArray((File) file);
         return new String(bytes, charset).replace('\n', '\r');
     }
-
+    
+    
     /**
-     * Determines whether the given object belongs to the predefined set of
-     * supported data types.
-     * 
+     * Determines whether the given object belongs to the predefined
+     * set of supported data types. 
      * @param body
-     *            The object to check.
-     * @return <code>true</code> when the type of the object is supported by the
-     *         PIX/PDQ adapter out-of-box, <code>false</code> otherwise.
+     *      The object to check. 
+     * @return
+     *      <code>true</code> when the type of the object is supported 
+     *      by the PIX/PDQ adapter out-of-box, <code>false</code> otherwise.
      */
     public static boolean typeSupported(Object body) {
-        final Class<?>[] knownTypes = new Class<?>[] { String.class,
-                MessageAdapter.class, ca.uhn.hl7v2.model.Message.class,
-                File.class, InputStream.class, java.nio.ByteBuffer.class,
-                byte[].class, GenericFile.class };
-
-        for (Class<?> type : knownTypes) {
+        final Class<?>[] knownTypes = new Class<?>[] {
+            String.class,
+            MessageAdapter.class,
+            ca.uhn.hl7v2.model.Message.class,
+            File.class,
+            InputStream.class,
+            java.nio.ByteBuffer.class,
+            byte[].class,
+            GenericFile.class
+        };
+        
+        for(Class<?> type : knownTypes) {
             try {
                 type.cast(body);
                 return true;
@@ -121,20 +128,23 @@ public class MllpMarshalUtils {
                 // nop
             }
         }
-
+        
         return false;
     }
 
+    
     /**
-     * Converts message contents to a {@link String} using the given character
-     * set and replaces all <tt>'\n'</tt>'s with <tt>'\r'</tt>'s. If requested,
-     * segments will be defragmented as well.
+     * Converts message contents to a {@link String} using the given character set
+     * and replaces all <tt>'\n'</tt>'s with <tt>'\r'</tt>'s.  
+     * If requested, segments will be defragmented as well.
      */
-    public static String convertBodyToString(Message message, String charset,
-            boolean defragmentSegments) throws Exception {
+    public static String convertBodyToString(
+            Message message, 
+            String charset, 
+            boolean defragmentSegments) throws Exception 
+    {
         InputStream stream = message.getBody(InputStream.class);
-        BufferedReader br = new BufferedReader(new InputStreamReader(stream,
-                charset));
+        BufferedReader br = new BufferedReader(new InputStreamReader(stream, charset));
         String s = IOConverter.toString(br);
         s = s.replace('\n', '\r');
         if (defragmentSegments) {
@@ -142,136 +152,101 @@ public class MllpMarshalUtils {
         }
         return s;
     }
-
+    
+    
     /**
-     * Converts the contents of the given Camel message to a
-     * {@link MessageAdapter}.
-     * 
+     * Converts the contents of the given Camel message to a {@link MessageAdapter}.  
      * @param message
-     *            Camel message to be converted.
+     *      Camel message to be converted.
      * @param charset
-     *            character set.
-     * @return a {@link MessageAdapter} or <code>null</code> when it was
-     *         impossible to get or create one.
-     * @param parser
-     *            HL7 parser.
+     *      character set.
+     * @return
+     *      a {@link MessageAdapter} or <code>null</code> when it was impossible
+     *      to get or create one.
+     * @param parser 
+     *      HL7 parser. 
      * @throws Exception
      */
-    public static MessageAdapter extractMessageAdapter(Message message,
-            String charset, Parser parser) throws Exception {
+    public static MessageAdapter extractMessageAdapter(
+            Message message, 
+            String charset, 
+            Parser parser) throws Exception 
+    {
         Object body = message.getBody();
         MessageAdapter msg = null;
-        if (body instanceof MessageAdapter) {
+        if(body instanceof MessageAdapter) {
             msg = (MessageAdapter) body;
-        } else if (body instanceof ca.uhn.hl7v2.model.Message) {
+        } else if(body instanceof ca.uhn.hl7v2.model.Message) {
             msg = new MessageAdapter(parser, (ca.uhn.hl7v2.model.Message) body);
         } else {
-            // process all other types (String, File, InputStream, ByteBuffer,
-            // byte[])
-            // by means of the standard routine. An exception here will be o.k.
+            // process all other types (String, File, InputStream, ByteBuffer, byte[])
+            // by means of the standard routine.  An exception here will be o.k.
             String s = marshalStandardTypes(message, charset, parser);
-            parse(parser, s);
-        }
+            if(s != null) {
+                s = s.replace('\n', '\r');
+                msg = MessageAdapters.make(parser, s);
+            }
+        } 
         return msg;
     }
-
-    /**
-     * Converts the contents of the given Camel message to a
-     * {@link MessageAdapter}, using the the message encoding's exchange.
-     * 
-     * @param message
-     *            a Camel Message;
-     * @param parser
-     *            a parser, with which to parse the message body, if necessary.
-     * @return a {@link MessageAdapter} or <code>null</code> when it was
-     *         impossible to get or create one.
-     */
-    public static MessageAdapter extractMessageAdapter(Message message,
-            Parser parser) {
-        if (message == null) {
-            throw new IllegalArgumentException("Unable to extract a "
-                    + MessageAdapter.class.getSimpleName()
-                    + " body from a null message");
-        }
-        Object body = message.getBody();
-        MessageAdapter msg = null;
-        if (body instanceof MessageAdapter) {
-            msg = (MessageAdapter) body;
-        } else if (body instanceof ca.uhn.hl7v2.model.Message) {
-            msg = new MessageAdapter(parser, (ca.uhn.hl7v2.model.Message) body);
-        } else {
-            msg = parse(parser, message.getBody(String.class));
-        }
-        if (msg == null) {
-            throw new RuntimeException("Cannot process "
-                    + ((body == null) ? "null" : body.getClass().getName()));
-        }
-        return msg;
-    }
-
-    public static MessageAdapter parse(Parser parser, String s) {
-        MessageAdapter result = null;
-        if (s != null) {
-            s = s.replace('\n', '\r');
-            result = MessageAdapters.make(parser, s);
-        }
-        return result;
-    }
-
+    
     /**
      * Formats and returns error message of an exception.
      * <p>
-     * In particular, all line break characters must be removed, otherwise they
-     * will break the structure of an HL7 NAK.
-     * 
+     * In particular, all line break characters must be removed, 
+     * otherwise they will break the structure of an HL7 NAK.
      * @param t
-     *            thrown exception.
-     * @return formatted error message from the given exception.
+     *      thrown exception.
+     * @return
+     *      formatted error message from the given exception.
      */
-    public static String formatErrorMessage(Throwable t) {
+    public static String formatErrorMessage(Throwable t) { 
         String s = t.getMessage();
-        if (s == null) {
+        if(s == null) {
             s = t.getClass().getName();
         }
-        s = s.replace('\n', ';');
+        s = s.replace('\n', ';'); 
         s = s.replace('\r', ';');
         return s;
     }
 
+    
     /**
-     * Generates a NAK message on processing errors on the basis of of the
-     * thrown exception and the original HAPI request message.
-     * 
+     * Generates a NAK message on processing errors on the basis of  
+     * of the thrown exception and the original HAPI request message.
      * @param t
-     *            thrown exception.
+     *      thrown exception.
      * @param original
-     *            original HAPI request message.
+     *      original HAPI request message.
      * @param endpoint
-     *            MLLP endpoint acting as transaction configuration holder.
+     *      MLLP endpoint acting as transaction configuration holder.                  
      */
-    public static MessageAdapter createNak(Throwable t,
-            ca.uhn.hl7v2.model.Message original, MllpEndpoint endpoint) {
+    public static MessageAdapter createNak(
+            Throwable t, 
+            ca.uhn.hl7v2.model.Message original,
+            MllpEndpoint endpoint)
+    {
         AbstractHL7v2Exception hl7Exception;
-        if (t instanceof AbstractHL7v2Exception) {
-            hl7Exception = (AbstractHL7v2Exception) t;
-        } else if (t.getCause() instanceof AbstractHL7v2Exception) {
+        if(t instanceof AbstractHL7v2Exception) {
+            hl7Exception = (AbstractHL7v2Exception) t; 
+        } else if(t.getCause() instanceof AbstractHL7v2Exception) {
             hl7Exception = (AbstractHL7v2Exception) t.getCause();
         } else {
             hl7Exception = new HL7v2Exception(
-                    MllpMarshalUtils.formatErrorMessage(t), endpoint
-                            .getTransactionConfiguration()
-                            .getRequestErrorDefaultErrorCode(), t);
+                    MllpMarshalUtils.formatErrorMessage(t), 
+                    endpoint.getTransactionConfiguration().getRequestErrorDefaultErrorCode(),
+                    t); 
         }
 
         ca.uhn.hl7v2.model.Message nak = endpoint.getNakFactory().createNak(
                 endpoint.getParser().getFactory(),
-                original,
+                original, 
                 hl7Exception,
-                (t instanceof MllpAcceptanceException) ? AckTypeCode.AR
-                        : AckTypeCode.AE);
+                (t instanceof MllpAcceptanceException) ? AckTypeCode.AR : AckTypeCode.AE);
 
         return new MessageAdapter(nak);
     }
+    
 
     /**
      * Splits the given String at occurrences of the given character.
@@ -293,48 +268,46 @@ public class MllpMarshalUtils {
         return result;
     }
 
+
     /**
-     * Returns <code>true</code> if the given String is <code>null</code> or
-     * empty.
+     * Returns <code>true</code> if the given String is <code>null</code> or empty.
      */
     public static boolean isEmpty(String s) {
         return (s == null) || (s.length() == 0);
     }
-
+    
     /**
-     * Returns <code>false</code> if the given String is <code>null</code> or
-     * empty.
+     * Returns <code>false</code> if the given String is <code>null</code> or empty.
      */
     public static boolean isPresent(String s) {
-        return !isEmpty(s);
+        return ! isEmpty(s);
     }
-
+    
+    
     /**
      * Ensures that all segments in the given HL7 message string representation
-     * are not longer than the given value (-1 means positive infinity). If
-     * needed, splits long segments by means of ADD segments, as described in
-     * paragraph 2.10.2.1 of the HL7 v.2.5 specification.
+     * are not longer than the given value (-1 means positive infinity).
+     * If needed, splits long segments by means of ADD segments, as described
+     * in paragraph 2.10.2.1 of the HL7 v.2.5 specification.
      * <p>
-     * <code>'\r'<code> characters are not considered in the length computation.
-     * 
+     * <code>'\r'<code> characters are not considered in the length computation. 
      * @param message
-     *            string representation of the source HL7 message.
+     *      string representation of the source HL7 message.
      * @param maxLength
-     *            maximal segment length, must be either -1 or greater than 4.
-     * @return string representation of a semantically equivalent message, whose
-     *         segments are not longer than the given value.
+     *      maximal segment length, must be either -1 or greater than 4.
+     * @return
+     *      string representation of a semantically equivalent message,   
+     *      whose segments are not longer than the given value. 
      */
-    public static String ensureMaximalSegmentsLength(String message,
-            int maxLength) {
+    public static String ensureMaximalSegmentsLength(String message, int maxLength) {
         if (maxLength == -1) {
             return message;
         }
         if (maxLength <= 4) {
-            throw new IllegalArgumentException(
-                    "maximal length must be greater than 4");
+            throw new IllegalArgumentException("maximal length must be greater than 4");
         }
         List<String> segments = splitString(message, '\r');
-
+        
         // check whether we have to do anything
         boolean needProcess = false;
         for (String segment : segments) {
@@ -343,7 +316,7 @@ public class MllpMarshalUtils {
                 break;
             }
         }
-        if (!needProcess) {
+        if ( ! needProcess) {
             return message;
         }
 
@@ -357,60 +330,59 @@ public class MllpMarshalUtils {
                 sb.append(segment).append('\r');
                 continue;
             }
-
+            
             // first part of the long segment
             sb.append(segment.substring(0, maxLength)).append('\r');
             // parts 2..n-1 of the long segment
             int startPos;
-            for (startPos = maxLength; startPos + restLength <= segment
-                    .length(); startPos += restLength) {
+            for (startPos = maxLength; startPos + restLength <= segment.length(); startPos += restLength) {
                 sb.append(prefix)
-                        .append(segment.substring(startPos, startPos
-                                + restLength)).append('\r');
+                  .append(segment.substring(startPos, startPos + restLength))
+                  .append('\r');
             }
             // part n of the long segment
             if (startPos < segment.length()) {
-                sb.append(prefix).append(segment.substring(startPos))
-                        .append('\r');
+                sb.append(prefix).append(segment.substring(startPos)).append('\r');
             }
         }
         return sb.toString();
     }
 
+    
     /**
      * Appends a splitted segment to the given StringBuilder.
      */
-    public static void appendSplittedSegment(StringBuilder sb,
-            List<String> fields, char fieldSeparator) {
+    public static void appendSplittedSegment(StringBuilder sb, List<String> fields, char fieldSeparator) {
         for (String field : fields) {
             sb.append(field).append(fieldSeparator);
         }
-        for (int len = sb.length(); sb.charAt(--len) == fieldSeparator;) {
+        for (int len = sb.length(); sb.charAt(--len) == fieldSeparator; ) {
             sb.setLength(len);
         }
         sb.append('\r');
     }
+ 
 
     /**
      * Appends segments from startIndex to endIndex-1 to the given StringBuider.
      */
-    public static void appendSegments(StringBuilder sb, List<String> segments,
-            int startIndex, int endIndex) {
+    public static void appendSegments(StringBuilder sb, List<String> segments, int startIndex, int endIndex) {
         for (int i = startIndex; i < endIndex; ++i) {
             sb.append(segments.get(i)).append('\r');
         }
     }
 
+    
     /**
      * Joins segments from startIndex to endIndex-1.
      */
-    public static CharSequence joinSegments(List<String> segments,
-            int startIndex, int endIndex) {
+    public static CharSequence joinSegments(List<String> segments, int startIndex, int endIndex) {
         StringBuilder sb = new StringBuilder();
         appendSegments(sb, segments, startIndex, endIndex);
         return sb;
     }
-
+ 
+    
     /**
      * Creates a single key string from the given key pieces.
      */
@@ -421,10 +393,10 @@ public class MllpMarshalUtils {
         }
         return sb.toString();
     }
-
+    
+    
     /**
-     * Returns an unique value which can be used, for example, as an HL7v2
-     * message ID.
+     * Returns an unique value which can be used, for example, as an HL7v2 message ID. 
      */
     public static String uniqueId() {
         return UUID.randomUUID().toString();

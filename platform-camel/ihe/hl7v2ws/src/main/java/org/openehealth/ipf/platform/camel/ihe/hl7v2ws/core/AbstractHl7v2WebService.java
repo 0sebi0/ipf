@@ -16,6 +16,7 @@
 package org.openehealth.ipf.platform.camel.ihe.hl7v2ws.core;
 
 import static org.openehealth.ipf.platform.camel.ihe.mllp.core.MllpMarshalUtils.extractMessageAdapter;
+import static org.openehealth.ipf.platform.camel.core.util.Exchanges.resultMessage;
 
 import org.apache.camel.Exchange;
 import org.apache.commons.logging.Log;
@@ -38,6 +39,9 @@ import ca.uhn.hl7v2.parser.Parser;
 /**
  * Generic implementation of an HL7v2-based Web Service.
  * 
+ * TODO  validate error type and configuration in {@link #AbstractHl7v2WebService(Hl7v2wsTransactionConfiguration)}createNakMessage
+ * 
+ * 
  * @author Dmytro Rud
  * @author Mitko Kolev
  * @author Stefan Ivanov
@@ -59,32 +63,28 @@ public class AbstractHl7v2WebService extends DefaultItiWebService {
             Message hl7v2Request = parseHl7v2Payload(requestXmlString);
             Exchange exchange = super.process(hl7v2Request);
 
-            Exception processingException = exchange.getException();
-            if (processingException != null) {
-                LOG.info("Creating NAK for exchange exception "  +  processingException.getMessage());
-                return createHl7XmlNakResponse(processingException);
+            Exception exchangeException = exchange.getException();
+            if (exchangeException != null) {
+                LOG.info("Creating NAK for exchange exception "  +  exchangeException.getMessage());
+                return createHl7v2Nak(exchangeException);
             }
-            
-            MessageAdapter response = extractMessageAdapter(Exchanges.resultMessage(exchange), PARSER);
-            //FIXME no need to adapt the message here. a Hl7 message is enough
-            return createHl7XmlResponse((Message)response.getTarget());
+            MessageAdapter responseMsg = extractFromExchange(exchange);
+            return createHl7v2Response(responseMsg);
             
         } catch (Exception formatException) {
-            return createHl7XmlNakResponse(formatException);
+            return createHl7v2Nak(formatException);
         }
-
     }
 
    
     public Message parseHl7v2Payload(String hl7v2Payload)
             throws EncodingNotSupportedException, HL7Exception {
         try {
-            String payload = normalize(hl7v2Payload);
+            String payload = resmoveStratingNewlines(hl7v2Payload);
             return PARSER.parse(payload);
         } catch (Exception e) {
             throw new HL7Exception("Unable to parse the XML payload. " + e.getMessage(), e);
         }
-
     }
 
     /**
@@ -93,12 +93,17 @@ public class AbstractHl7v2WebService extends DefaultItiWebService {
     public Hl7v2wsTransactionConfiguration getConfiguration() {
         return config;
     }
-
-    private String createHl7XmlResponse(Message message) throws HL7Exception  {
-        return  toHl7v2String(message);
+    
+    protected MessageAdapter extractFromExchange(Exchange exchange) throws Exception{
+        String charset =  exchange.getProperty(Exchange.CHARSET_NAME, String.class);
+        return extractMessageAdapter(resultMessage(exchange), charset, PARSER);
     }
 
-    private String normalize(String hl7String) throws SAXException {
+    protected String createHl7v2Response(MessageAdapter adapter) throws HL7Exception  {
+        return  toHl7v2String((Message)adapter.getTarget());
+    }
+
+    private String resmoveStratingNewlines(String hl7String) throws SAXException {
         String result = hl7String;
         if (!hl7String.startsWith("MSH")) {
             int headerIndex = hl7String.indexOf("MSH");
@@ -111,29 +116,27 @@ public class AbstractHl7v2WebService extends DefaultItiWebService {
         return result;
     }
 
-    private String toHl7v2String(Message message) throws HL7Exception {
+    protected String toHl7v2String(Message message) throws HL7Exception {
         String parsed = PARSER.encode(message);
         //make it human readable
         return parsed.replaceAll("\r", "\r\n");
     }
     
 
-    private Message createNak(Throwable t) {
-
+    protected Message createNakMessage(Throwable t) {
         HL7v2Exception hl7e = new HL7v2Exception(
                 MllpMarshalUtils.formatErrorMessage(t),
                 config.getRequestErrorDefaultErrorCode(), t);
 
-        // FIXME, validate error type and configuration
+        
         Message nak = MessageUtils.defaultNak(hl7e, AckTypeCode.AR,
                 config.getHl7Version(), config.getSendingApplication(),
                 config.getSendingFacility());
         return nak;
     }
 
-    
-    private String createHl7XmlNakResponse(Throwable exception) {
-        Message nak = createNak(exception);
+    protected String createHl7v2Nak(Throwable exception) {
+        Message nak = createNakMessage(exception);
         try{
             return toHl7v2String(nak);
         }catch (HL7Exception e){
