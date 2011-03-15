@@ -113,6 +113,7 @@ public class AbstractHl7v2WebService extends DefaultItiWebService {
 
     private String toHl7v2String(Message message) throws HL7Exception {
         String parsed = PARSER.encode(message);
+        //make it human readable
         return parsed.replaceAll("\r", "\r\n");
     }
     

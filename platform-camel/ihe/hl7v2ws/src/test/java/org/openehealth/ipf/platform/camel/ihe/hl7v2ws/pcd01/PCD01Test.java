@@ -29,23 +29,13 @@ public class PCD01Test extends ServletContextTestSupport {
     
     private static final String SPEC_REQUEST = load("pcd01/pcd01-request.hl7v2");
     private static final String SPEC_RESPONSE = load("pcd01/pcd01-response.hl7v2");
-    
-      
+   
     @Test
     public void testHappyCase() throws Exception {
         String url = "pcd-pcd01://localhost:" + getServerPort()
                 + "/devicedata";
         Object response = template.requestBody(url, SPEC_REQUEST);
         assertEquals(SPEC_RESPONSE, response);
-    }
-    
-    @Test
-    public void testApplicationError() throws Exception {
-        String url = "pcd-pcd01://localhost:" + getServerPort()
-                + "/exception";
-        String response = template.requestBody(url, SPEC_REQUEST, String.class);
-        assertTrue(response.startsWith("MSH|^~\\&|"));
-        assertTrue(response.contains("java.lang.RuntimeException"));
     }
     
     @Test
@@ -56,14 +46,18 @@ public class PCD01Test extends ServletContextTestSupport {
         assertTrue(response.startsWith("MSH|^~\\&|"));
         assertTrue(response.contains("Application internal error"));
     }
-
+    
     @Test
-    public void testParserSupportsCarriageReturn() throws Exception {
-        XmlSlurper s = new XmlSlurper(true,true);
-        s.parseText("<tag>" + SPEC_REQUEST.replaceAll("&", "&amp;") + "</tag>");
-        
+    public void testApplicationError() throws Exception {
+        String url = "pcd-pcd01://localhost:" + getServerPort()
+                + "/route_throws_exception";
+        String response = template.requestBody(url, SPEC_REQUEST, String.class);
+        assertTrue(response.startsWith("MSH|^~\\&|"));
+        assertTrue(response.contains("java.lang.RuntimeException"));
     }
     
+ 
+
     public RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
 
@@ -73,7 +67,7 @@ public class PCD01Test extends ServletContextTestSupport {
                     .onException(Exception.class).maximumRedeliveries(0).end()
                     .process(setOutBody(SPEC_RESPONSE));
                 
-                from("pcd-pcd01:exception")
+                from("pcd-pcd01:route_throws_exception")
                     .throwException(new RuntimeException())
                     .process(setOutBody(SPEC_RESPONSE));
             }
